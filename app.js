@@ -10,7 +10,7 @@ const statusHint = document.getElementById('status');
 const modeSelect = document.getElementById('mode');
 const strengthSelect = document.getElementById('strength');
 
-const WORKER_URL = "https://your-worker-name.workers.dev/humanize";
+const WORKER_URL = "https://bold-feather-03a6.nikolaigoogol7.workers.dev/humanize/";
 
 // 1. Word Counter Logic
 inputArea.addEventListener('input', () => {
