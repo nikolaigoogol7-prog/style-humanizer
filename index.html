@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Humanize — Rewrite for Clarity & Natural Tone</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="wrap">
+    <h1>Humanize</h1>
+    <p class="sub">Rewrite text to sound more natural while keeping meaning. Max 10,000 words.</p>
+  </header>
+
+  <main class="wrap grid">
+    <section class="card">
+      <h2>Input</h2>
+      <textarea id="input" placeholder="Paste text here (max 10,000 words)…"></textarea>
+
+      <div class="row">
+        <div class="pill">Words: <span id="wordCount">0</span> / 10000</div>
+        <div class="pill">Mode:
+          <select id="mode">
+            <option value="academic">Academic (clear, natural)</option>
+            <option value="general">General (natural)</option>
+            <option value="simple">Simplify (easier language)</option>
+          </select>
+        </div>
+        <div class="pill">Strength:
+          <select id="strength">
+            <option value="low">Low (light edit)</option>
+            <option value="med" selected>Medium (rewrite)</option>
+            <option value="high">High (heavy rewrite)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="btnHumanize">Humanize</button>
+        <button id="btnClear" class="ghost">Clear</button>
+      </div>
+
+      <p class="hint" id="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>Output</h2>
+      <textarea id="output" placeholder="Rewritten text appears here…" readonly></textarea>
+      <div class="row">
+        <button id="btnCopy" class="secondary">Copy output</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <span>Frontend: GitHub Pages • Backend: Cloudflare Worker</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
