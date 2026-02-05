@@ -10,8 +10,7 @@ const statusHint = document.getElementById('status');
 const modeSelect = document.getElementById('mode');
 const strengthSelect = document.getElementById('strength');
 
-// ⚠️ CHANGE THIS: Put your actual Cloudflare Worker link here
-const WORKER_URL = "https://your-worker-name.your-subdomain.workers.dev/humanize";
+const WORKER_URL = "https://your-worker-name.workers.dev/humanize";
 
 // 1. Word Counter Logic
 inputArea.addEventListener('input', () => {
