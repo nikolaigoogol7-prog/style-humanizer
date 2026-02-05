@@ -2,7 +2,7 @@ const MAX_WORDS = 10000;
 
 // ✅ YOUR REAL CLOUDFLARE WORKER ENDPOINT
 const WORKER_URL =
-  "https://bold-feather-03a6.nikolaigoogol7.workers.dev/humanize";
+ "https://bold-feather-03a6.nikolaigoogol7.workers.dev/humanize"
 
 const elInput = document.getElementById("input");
 const elOutput = document.getElementById("output");
