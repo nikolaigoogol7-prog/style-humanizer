@@ -1,7 +1,8 @@
 const MAX_WORDS = 10000;
 
-// IMPORTANT: set this to your Worker URL after you deploy it.
-const WORKER_URL = "https://YOUR-WORKER.your-subdomain.workers.dev/humanize";
+// ✅ YOUR REAL CLOUDFLARE WORKER ENDPOINT
+const WORKER_URL =
+  "https://bold-feather-03a6.nikolaigoogol7.workers.dev/humanize";
 
 const elInput = document.getElementById("input");
 const elOutput = document.getElementById("output");
@@ -14,66 +15,82 @@ const btnHumanize = document.getElementById("btnHumanize");
 const btnClear = document.getElementById("btnClear");
 const btnCopy = document.getElementById("btnCopy");
 
-function countWords(text){
+function countWords(text) {
   const m = text.trim().match(/\b[\p{L}\p{N}']+\b/gu);
   return m ? m.length : 0;
 }
 
-function updateCounts(){
+function updateCounts() {
   const words = countWords(elInput.value);
-  elWord.textContent = String(words);
-  btnHumanize.disabled = words === 0 || words > MAX_WORDS;
-  if (words > MAX_WORDS) elStatus.textContent = "Too long: please stay within 10,000 words.";
-  else elStatus.textContent = "";
+  if (elWord) elWord.textContent = String(words);
+
+  if (btnHumanize) {
+    btnHumanize.disabled = words === 0 || words > MAX_WORDS;
+  }
+
+  if (elStatus) {
+    elStatus.textContent =
+      words > MAX_WORDS
+        ? "Too long: please stay within 10,000 words."
+        : "";
+  }
 }
 
-elInput.addEventListener("input", updateCounts);
-updateCounts();
-
-btnClear.addEventListener("click", () => {
-  elInput.value = "";
-  elOutput.value = "";
+if (elInput) {
+  elInput.addEventListener("input", updateCounts);
   updateCounts();
-});
+}
 
-btnCopy.addEventListener("click", async () => {
-  const t = elOutput.value.trim();
-  if (!t) return;
-  await navigator.clipboard.writeText(t);
-  btnCopy.textContent = "Copied!";
-  setTimeout(() => (btnCopy.textContent = "Copy output"), 900);
-});
+if (btnClear) {
+  btnClear.addEventListener("click", () => {
+    elInput.value = "";
+    elOutput.value = "";
+    updateCounts();
+  });
+}
 
-btnHumanize.addEventListener("click", async () => {
-  const text = elInput.value;
-  const words = countWords(text);
-  if (!words || words > MAX_WORDS) return;
+if (btnCopy) {
+  btnCopy.addEventListener("click", async () => {
+    const t = elOutput.value.trim();
+    if (!t) return;
+    await navigator.clipboard.writeText(t);
+    btnCopy.textContent = "Copied!";
+    setTimeout(() => (btnCopy.textContent = "Copy output"), 900);
+  });
+}
 
-  btnHumanize.disabled = true;
-  elStatus.textContent = "Rewriting…";
+if (btnHumanize) {
+  btnHumanize.addEventListener("click", async () => {
+    const text = elInput.value;
+    const words = countWords(text);
+    if (!words || words > MAX_WORDS) return;
 
-  try{
-    const res = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text,
-        mode: elMode.value,
-        strength: elStrength.value
-      })
-    });
+    btnHumanize.disabled = true;
+    if (elStatus) elStatus.textContent = "Rewriting…";
 
-    if (!res.ok){
-      const err = await res.text();
-      throw new Error(err || `HTTP ${res.status}`);
+    try {
+      const res = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          mode: elMode ? elMode.value : "academic",
+          strength: elStrength ? elStrength.value : "high"
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      elOutput.value = data.rewritten || "";
+      if (elStatus) elStatus.textContent = "Done.";
+    } catch (e) {
+      if (elStatus) elStatus.textContent = `Error: ${e.message}`;
+    } finally {
+      btnHumanize.disabled = false;
     }
-
-    const data = await res.json();
-    elOutput.value = data.rewritten || "";
-    elStatus.textContent = "Done.";
-  } catch (e){
-    elStatus.textContent = `Error: ${e.message}`;
-  } finally{
-    btnHumanize.disabled = false;
-  }
-});
+  });
+}
