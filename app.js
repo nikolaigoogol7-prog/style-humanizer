@@ -1,96 +1,83 @@
-const MAX_WORDS = 10000;
+// app.js
 
-// ✅ YOUR REAL CLOUDFLARE WORKER ENDPOINT
-const WORKER_URL =
- "https://bold-feather-03a6.nikolaigoogol7.workers.dev/humanize"
+const inputArea = document.getElementById('input');
+const outputArea = document.getElementById('output');
+const btnHumanize = document.getElementById('btnHumanize');
+const btnClear = document.getElementById('btnClear');
+const btnCopy = document.getElementById('btnCopy');
+const wordCountDisplay = document.getElementById('wordCount');
+const statusHint = document.getElementById('status');
+const modeSelect = document.getElementById('mode');
+const strengthSelect = document.getElementById('strength');
 
-const elInput = document.getElementById("input");
-const elOutput = document.getElementById("output");
-const elWord = document.getElementById("wordCount");
-const elMode = document.getElementById("mode");
-const elStrength = document.getElementById("strength");
-const elStatus = document.getElementById("status");
+// ⚠️ CHANGE THIS: Put your actual Cloudflare Worker link here
+const WORKER_URL = "https://your-worker-name.your-subdomain.workers.dev/humanize";
 
-const btnHumanize = document.getElementById("btnHumanize");
-const btnClear = document.getElementById("btnClear");
-const btnCopy = document.getElementById("btnCopy");
+// 1. Word Counter Logic
+inputArea.addEventListener('input', () => {
+    const words = inputArea.value.trim().split(/\s+/).filter(w => w.length > 0).length;
+    wordCountDisplay.innerText = words;
+    if (words > 10000) {
+        wordCountDisplay.style.color = "red";
+    } else {
+        wordCountDisplay.style.color = "inherit";
+    }
+});
 
-function countWords(text) {
-  const m = text.trim().match(/\b[\p{L}\p{N}']+\b/gu);
-  return m ? m.length : 0;
-}
+// 2. Clear Button
+btnClear.addEventListener('click', () => {
+    inputArea.value = "";
+    outputArea.value = "";
+    wordCountDisplay.innerText = "0";
+    statusHint.innerText = "";
+});
 
-function updateCounts() {
-  const words = countWords(elInput.value);
-  if (elWord) elWord.textContent = String(words);
+// 3. Copy Button
+btnCopy.addEventListener('click', () => {
+    if (!outputArea.value) return;
+    navigator.clipboard.writeText(outputArea.value);
+    btnCopy.innerText = "Copied!";
+    setTimeout(() => btnCopy.innerText = "Copy output", 2000);
+});
 
-  if (btnHumanize) {
-    btnHumanize.disabled = words === 0 || words > MAX_WORDS;
-  }
+// 4. MAIN HUMANIZE FUNCTION
+btnHumanize.addEventListener('click', async () => {
+    const text = inputArea.value.trim();
+    
+    if (!text) {
+        statusHint.innerText = "⚠️ Please enter some text first.";
+        return;
+    }
 
-  if (elStatus) {
-    elStatus.textContent =
-      words > MAX_WORDS
-        ? "Too long: please stay within 10,000 words."
-        : "";
-  }
-}
-
-if (elInput) {
-  elInput.addEventListener("input", updateCounts);
-  updateCounts();
-}
-
-if (btnClear) {
-  btnClear.addEventListener("click", () => {
-    elInput.value = "";
-    elOutput.value = "";
-    updateCounts();
-  });
-}
-
-if (btnCopy) {
-  btnCopy.addEventListener("click", async () => {
-    const t = elOutput.value.trim();
-    if (!t) return;
-    await navigator.clipboard.writeText(t);
-    btnCopy.textContent = "Copied!";
-    setTimeout(() => (btnCopy.textContent = "Copy output"), 900);
-  });
-}
-
-if (btnHumanize) {
-  btnHumanize.addEventListener("click", async () => {
-    const text = elInput.value;
-    const words = countWords(text);
-    if (!words || words > MAX_WORDS) return;
-
+    // UI Feedback
     btnHumanize.disabled = true;
-    if (elStatus) elStatus.textContent = "Rewriting…";
+    btnHumanize.innerText = "Processing...";
+    statusHint.innerText = "Connecting to AI engine...";
 
     try {
-      const res = await fetch(WORKER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          mode: elMode ? elMode.value : "academic",
-          strength: elStrength ? elStrength.value : "high"
-        })
-      });
+        const response = await fetch(WORKER_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                text: text,
+                mode: modeSelect.value,
+                strength: strengthSelect.value
+            })
+        });
 
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err || `HTTP ${res.status}`);
-      }
+        const data = await response.json();
 
-      const data = await res.json();
-      elOutput.value = data.rewritten || "";
-      if (elStatus) elStatus.textContent = "Done.";
-    } catch (e) {
-      if (elStatus) elStatus.textContent = `Error: ${e.message}`;
+        if (data.rewritten) {
+            outputArea.value = data.rewritten;
+            statusHint.innerText = "✅ Successfully humanized!";
+        } else {
+            statusHint.innerText = "❌ Error: " + (data.error || "Unknown error.");
+        }
+    } catch (error) {
+        statusHint.innerText = "❌ Connection Error. Check your Worker URL.";
+        console.error(error);
     } finally {
-      btnHumanize.disabled = false;
+        btnHumanize.disabled = false;
+        btnHumanize.innerText = "Humanize";
     }
-  });
-}
+});
